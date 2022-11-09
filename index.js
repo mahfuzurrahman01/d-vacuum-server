@@ -38,6 +38,13 @@ async function run() {
       const result = await reviewCollection.insertOne(review)
       res.send(result)
     })
+    //get reviews from database
+    app.get('/comments', async (req, res) => {
+      const query = {}
+      const cursor = reviewCollection.find(query).sort({ time: -1 })
+      const result = await cursor.toArray()
+      res.send(result)
+    })
   }
   finally {
 

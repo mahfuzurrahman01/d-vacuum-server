@@ -17,6 +17,12 @@ async function run() {
   try {
     const serviceCollection = client.db('serviceData').collection('services')
     const reviewCollection = client.db('serviceData').collection('reviews')
+    //insert new service on mongo
+    app.post('/add_service', async (req, res) => {
+      const service = req.body;
+      const result = await serviceCollection.insertOne(service)
+      res.send(result)
+    })
     //get services from mongodb
     app.get('/services', async (req, res) => {
       const limit = parseInt(req.query.limit);
@@ -39,10 +45,19 @@ async function run() {
       res.send(result)
     })
     //get reviews from database
-    app.get('/comments', async (req, res) => {
-      const query = {}
+    app.get('/comments/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = { reviewId: id }
       const cursor = reviewCollection.find(query).sort({ time: -1 })
       const result = await cursor.toArray()
+      res.send(result)
+    })
+    //get specific data for a client
+    app.get('/comment', async (req, res) => {
+      const user = req.query.email;
+      const query = { userEmail: user }
+      const cursor = reviewCollection.find(query);
+      const result = await cursor.toArray();
       res.send(result)
     })
   }

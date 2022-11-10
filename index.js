@@ -1,5 +1,6 @@
 const express = require('express')
 const cors = require('cors')
+const jwt = require('jsonwebtoken')
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const app = express()
 const port = process.env.PORT || 5000;
@@ -13,10 +14,36 @@ app.use(express.json())
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@clusterm01.jgnnfze.mongodb.net/?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
 
+function verifyJwt(req, res, next) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader) {
+    res.status(401).send({ massage: 'unauthorized access' })
+  }
+  const token = authHeader.split(' ')[1]
+  jwt.verify(token, process.env.ACCESS_TOKEN, function (err, decoded) {
+    if (err) {
+      return res.status(403).send({ massage: 'unauthorized access' })
+    }
+    req.decoded = decoded;
+    next()
+  })
+
+
+}
+
+
+
 async function run() {
   try {
     const serviceCollection = client.db('serviceData').collection('services')
     const reviewCollection = client.db('serviceData').collection('reviews')
+    //jwt 
+    app.post('/jwt', async (req, res) => {
+      const user = req.body;
+      const token = jwt.sign(user, process.env.ACCESS_TOKEN, { expiresIn: '5h' })
+      res.send({ token })
+    })
+
     //insert new service on mongo
     app.post('/add_service', async (req, res) => {
       const service = req.body;
@@ -74,8 +101,13 @@ async function run() {
       res.send(result)
     })
     //get specific data for a client
-    app.get('/comment', async (req, res) => {
+    app.get('/comment', verifyJwt, async (req, res) => {
       const user = req.query.email;
+      const decoded = req.decoded;
+      console.log(decoded)
+      if (decoded.email !== user) {
+        res.status(403).send({ massage: 'unauthorized access' })
+      }
       const query = { userEmail: user }
       const cursor = reviewCollection.find(query);
       const result = await cursor.toArray();

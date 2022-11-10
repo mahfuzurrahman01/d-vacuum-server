@@ -44,6 +44,14 @@ async function run() {
       const result = await reviewCollection.insertOne(review)
       res.send(result)
     })
+    //delete review from data base client wise 
+    app.delete('/review/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: ObjectId(id) }
+      const result = await reviewCollection.deleteOne(query)
+      res.send(result)
+    })
+
     //get reviews from database
     app.get('/comments/:id', async (req, res) => {
       const id = req.params.id;

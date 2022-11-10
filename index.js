@@ -14,6 +14,7 @@ app.use(express.json())
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@clusterm01.jgnnfze.mongodb.net/?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
 
+
 function verifyJwt(req, res, next) {
   const authHeader = req.headers.authorization;
   if (!authHeader) {
@@ -105,10 +106,14 @@ async function run() {
       const user = req.query.email;
       const decoded = req.decoded;
       console.log(decoded)
-      if (decoded.email !== user) {
+
+      if (decoded.email !== req.query.email) {
         res.status(403).send({ massage: 'unauthorized access' })
       }
-      const query = { userEmail: user }
+      let query = {};
+      if (req.query.email) {
+        query = { userEmail: user }
+      }
       const cursor = reviewCollection.find(query);
       const result = await cursor.toArray();
       res.send(result)

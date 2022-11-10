@@ -51,7 +51,20 @@ async function run() {
       const result = await reviewCollection.deleteOne(query)
       res.send(result)
     })
-
+    //update review from data 
+    app.patch('/update/:id', async (req, res) => {
+      const id = req.params.id;
+      console.log(id)
+      const query = { _id: ObjectId(id) }
+      const review = req.body.newReview
+      const updateDoc = {
+        $set: {
+          comment: review
+        }
+      }
+      const result = await reviewCollection.updateOne(query, updateDoc)
+      res.send(result)
+    })
     //get reviews from database
     app.get('/comments/:id', async (req, res) => {
       const id = req.params.id;
